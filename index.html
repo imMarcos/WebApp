@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Experience</title>
+  </head>
+  <body>
+    <div id="app">
+
+      <!-- ── Phase 1: Scroll storytelling ── -->
+      <div id="phase-1">
+
+        <section class="story-scene" data-scene="0">
+          <p class="story-text">Imagina un mundo donde todo está conectado.</p>
+        </section>
+
+        <section class="story-scene" data-scene="1">
+          <p class="story-text">Cada interacción es una oportunidad de crear algo extraordinario.</p>
+        </section>
+
+        <section class="story-scene" data-scene="2">
+          <p class="story-text">La tecnología existe para servir a las personas.</p>
+        </section>
+
+        <section class="story-scene" data-scene="3">
+          <p class="story-text">Ahora, da el primer paso.</p>
+        </section>
+
+        <!-- spacer que dispara la transición a Fase 2 -->
+        <div id="phase1-exit"></div>
+      </div>
+
+      <!-- ── Phase 2: QR Scanner ── -->
+      <div id="phase-2" class="phase-hidden">
+        <div class="phase-inner">
+          <h2 class="phase-heading">Escanea el código QR</h2>
+          <p class="phase-sub">Apunta la cámara hacia el código para continuar.</p>
+
+          <div id="camera-wrap">
+            <video id="camera-feed" autoplay playsinline muted></video>
+            <canvas id="scan-canvas"></canvas>
+            <div class="scan-reticle">
+              <div class="corner tl"></div>
+              <div class="corner tr"></div>
+              <div class="corner bl"></div>
+              <div class="corner br"></div>
+            </div>
+          </div>
+
+          <button id="btn-camera" class="cta-btn">Activar cámara</button>
+          <p id="scan-status" class="scan-status"></p>
+        </div>
+      </div>
+
+      <!-- ── Phase 3: Agentforce Chat ── -->
+      <div id="phase-3" class="phase-hidden">
+        <div class="phase-inner chat-inner">
+          <h2 class="phase-heading">Agente conectado</h2>
+
+          <div id="chat-messages"></div>
+
+          <form id="chat-form" class="chat-form">
+            <input
+              id="chat-input"
+              class="chat-input"
+              type="text"
+              placeholder="Escribe tu mensaje…"
+              autocomplete="off"
+            />
+            <button type="submit" class="cta-btn">Enviar</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- transition overlay -->
+    <div id="transition-overlay"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

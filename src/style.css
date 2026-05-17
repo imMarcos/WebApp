@@ -1,0 +1,327 @@
+/* ── Reset ────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Tokens ───────────────────────────────── */
+:root {
+  --bg:           #000000;
+  --fg:           #f5f5f7;
+  --fg-muted:     #6e6e73;
+  --accent:       #2997ff;
+  --accent-hover: #1d7fd4;
+  --surface:      #1c1c1e;
+  --border:       #3a3a3c;
+  --radius:       14px;
+  --font:         -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+                  'Helvetica Neue', Arial, sans-serif;
+}
+
+/* ── Base ─────────────────────────────────── */
+html {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* ── Phase visibility ─────────────────────── */
+.phase-hidden {
+  display: none !important;
+}
+
+/* ── Full-screen transition overlay ──────── */
+#transition-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* ═══════════════════════════════════════════
+   PHASE 1 – Scroll storytelling
+   ═══════════════════════════════════════════ */
+
+#phase-1 {
+  position: relative;
+}
+
+.story-scene {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 clamp(1.5rem, 8vw, 10rem);
+}
+
+.story-text {
+  font-size: clamp(2rem, 5.5vw, 5.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-align: center;
+  max-width: 880px;
+  color: var(--fg);
+}
+
+/* SplitText injects .word spans */
+.story-text .word {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+/* Spacer that fires the Phase 2 transition */
+#phase1-exit {
+  height: 100vh;
+}
+
+/* Scroll hint (bottom center, first scene only) */
+.scroll-hint {
+  position: fixed;
+  bottom: 2.5rem;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--fg-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.scroll-hint svg {
+  width: 18px;
+  height: 18px;
+  animation: arrowBounce 2s ease-in-out infinite;
+}
+
+@keyframes arrowBounce {
+  0%, 100% { translate: 0 0; }
+  50%       { translate: 0 7px; }
+}
+
+/* Progress dots (right side) */
+.story-dots {
+  position: fixed;
+  right: 2rem;
+  top: 50%;
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 50;
+}
+
+.story-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--fg-muted);
+  transition: background 0.3s, scale 0.3s;
+}
+
+.story-dot.active {
+  background: var(--fg);
+  scale: 1.6;
+}
+
+/* ═══════════════════════════════════════════
+   PHASE 2 – QR Scanner
+   ═══════════════════════════════════════════ */
+
+#phase-2,
+#phase-3 {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.phase-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 520px;
+}
+
+.phase-heading {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-align: center;
+}
+
+.phase-sub {
+  color: var(--fg-muted);
+  font-size: 1rem;
+  text-align: center;
+  line-height: 1.55;
+}
+
+/* Camera viewport */
+#camera-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #111;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+#camera-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+#scan-canvas {
+  display: none;
+}
+
+/* Corner reticle */
+.scan-reticle {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-style: solid;
+  border-color: var(--accent);
+  border-width: 0;
+}
+
+.corner.tl { top: 18px;    left: 18px;   border-top-width: 3px;    border-left-width: 3px;  border-top-left-radius: 4px; }
+.corner.tr { top: 18px;    right: 18px;  border-top-width: 3px;    border-right-width: 3px; border-top-right-radius: 4px; }
+.corner.bl { bottom: 18px; left: 18px;   border-bottom-width: 3px; border-left-width: 3px;  border-bottom-left-radius: 4px; }
+.corner.br { bottom: 18px; right: 18px;  border-bottom-width: 3px; border-right-width: 3px; border-bottom-right-radius: 4px; }
+
+.scan-status {
+  color: var(--fg-muted);
+  font-size: 0.875rem;
+  min-height: 1.25em;
+  text-align: center;
+}
+
+/* ── Shared CTA button ────────────────────── */
+.cta-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 980px;
+  padding: 0.75rem 2rem;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, scale 0.15s;
+  white-space: nowrap;
+}
+
+.cta-btn:hover  { background: var(--accent-hover); }
+.cta-btn:active { scale: 0.97; }
+.cta-btn:disabled { opacity: 0.35; cursor: default; }
+
+/* ═══════════════════════════════════════════
+   PHASE 3 – Agentforce chat
+   ═══════════════════════════════════════════ */
+
+.chat-inner {
+  max-width: 660px;
+}
+
+#chat-messages {
+  width: 100%;
+  max-height: 55vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 0.7rem 1rem;
+  border-radius: 18px;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  animation: bubbleIn 0.22s ease-out;
+}
+
+.chat-bubble.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-bubble.agent {
+  align-self: flex-start;
+  background: var(--surface);
+  color: var(--fg);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-bubble.typing {
+  align-self: flex-start;
+  background: var(--surface);
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+@keyframes bubbleIn {
+  from { opacity: 0; translate: 0 6px; }
+  to   { opacity: 1; translate: 0 0; }
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 980px;
+  padding: 0.75rem 1.25rem;
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chat-input:focus {
+  border-color: var(--accent);
+}
+
+.chat-input::placeholder {
+  color: var(--fg-muted);
+}
