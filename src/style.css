@@ -308,32 +308,82 @@ body {
   border-radius: 18px;
   font-size: 0.95rem;
   line-height: 1.55;
-  animation: bubbleIn 0.22s ease-out;
 }
 
+/* Usuario: slide desde la derecha */
 .chat-bubble.user {
   align-self: flex-end;
   background: var(--accent);
   color: #fff;
   border-bottom-right-radius: 4px;
+  animation: slideRight 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+@keyframes slideRight {
+  from { opacity: 0; translate: 28px 0; }
+  to   { opacity: 1; translate: 0 0; }
+}
+
+/* Agente: aparece con fade, el texto se escribe letra a letra via JS */
 .chat-bubble.agent {
   align-self: flex-start;
   background: var(--surface);
   color: var(--fg);
   border-bottom-left-radius: 4px;
+  animation: fadeIn 0.2s ease-out;
 }
 
+/* Typing indicator (tres puntos) */
 .chat-bubble.typing {
   align-self: flex-start;
   background: var(--surface);
-  color: var(--fg-muted);
-  font-style: italic;
+  padding: 0.8rem 1.2rem;
+  border-bottom-left-radius: 4px;
+  animation: fadeIn 0.2s ease-out;
 }
 
-@keyframes bubbleIn {
-  from { opacity: 0; translate: 0 6px; }
+.typing-dots {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  height: 14px;
+}
+
+.typing-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fg-muted);
+  animation: dotPulse 1.2s ease-in-out infinite;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { scale: 0.7; opacity: 0.4; }
+  40%           { scale: 1;   opacity: 1; }
+}
+
+/* Cursor parpadeante del typewriter */
+.tw-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 0.95em;
+  background: var(--fg);
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  animation: cursorBlink 0.6s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; translate: 0 4px; }
   to   { opacity: 1; translate: 0 0; }
 }
 

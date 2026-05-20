@@ -1,104 +1,142 @@
-const BOOTSTRAP_URL =
-  'https://nt1779211331673.my.site.com/ESWWebQRDeployment1779234551621/assets/js/bootstrap.min.js'
+const BASE_URL = import.meta.env.VITE_AGENTFORCE_URL    || ''
+const API_KEY  = import.meta.env.VITE_AGENTFORCE_API_KEY || ''
+
+const TYPEWRITER_SPEED = 22 // ms por carácter
+
+let sessionId = null
 
 /**
- * Fase 3: carga el widget de Agentforce Embedded Messaging
- * y pasa el customerId (contenido del QR) como campo oculto de pre-chat.
- *
+ * Fase 3: chat propio con efecto typewriter conectado a Agentforce REST API.
  * @param {string} customerId  Contenido del QR escaneado en Fase 2
  */
-export function initPhase3(customerId) {
-  _clearSalesforceSession()
+export async function initPhase3(customerId) {
+  const messagesEl = document.getElementById('chat-messages')
+  const form       = document.getElementById('chat-form')
+  const input      = document.getElementById('chat-input')
 
-  const script = document.createElement('script')
-  script.type  = 'text/javascript'
-  script.src   = BOOTSTRAP_URL
+  const typingEl = _addTyping(messagesEl)
 
-  script.onload  = () => _initMessaging(customerId)
-  script.onerror = () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true)
-
-  document.body.appendChild(script)
-}
-
-// ── Inicializa el widget una vez cargado el bootstrap ────────────────────────
-
-function _initMessaging(customerId) {
   try {
-    embeddedservice_bootstrap.settings.language = 'es'
-
-    embeddedservice_bootstrap.init(
-      '00DKh000003TzXB',
-      'WebQRDeployment',
-      'https://nt1779211331673.my.site.com/ESWWebQRDeployment1779234551621',
-      { scrt2URL: 'https://nt1779211331673.my.salesforce-scrt.com' }
-    )
-
-    // El widget dispara este evento cuando está listo para recibir configuración
-    window.addEventListener('onEmbeddedMessagingReady', () => {
-      _onReady(customerId)
-    })
+    sessionId = await _createSession(customerId)
+    typingEl.remove()
+    await _typewrite(messagesEl, '¡Hola! Estoy listo para ayudarte.')
   } catch (err) {
-    console.error('Agentforce init error:', err)
-    _setStatus('Error al inicializar el agente.', true)
+    console.error('Session error:', err)
+    typingEl.remove()
+    await _typewrite(messagesEl, 'No se pudo conectar con el agente. Revisa la configuración.')
+    return
   }
-}
 
-// ── Widget listo: termina sesión previa y abre chat nuevo ────────────────────
+  input.disabled = false
+  input.focus()
 
-function _onReady(customerId) {
-  embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const text = input.value.trim()
+    if (!text) return
 
-  if (_hasActiveSession()) {
-    // Intenta cerrar la conversación activa; si falla, abre directo
-    window.addEventListener('onEmbeddedMessagingConversationEnded', () => {
-      _clearSalesforceSession()
-      setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 600)
-    }, { once: true })
+    input.value    = ''
+    input.disabled = true
+
+    _addUserBubble(messagesEl, text)
+
+    const typingEl2 = _addTyping(messagesEl)
 
     try {
-      embeddedservice_bootstrap.utilAPI.endChat()
-    } catch {
-      // endChat no disponible o sin conversación activa → abre directo
-      _clearSalesforceSession()
-      setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 800)
+      const reply = await _sendMessage(text)
+      typingEl2.remove()
+      await _typewrite(messagesEl, reply)
+    } catch (err) {
+      console.error('Message error:', err)
+      typingEl2.remove()
+      await _typewrite(messagesEl, 'Error al enviar el mensaje.')
+    } finally {
+      input.disabled = false
+      input.focus()
     }
-  } else {
-    setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 800)
-  }
-
-  _setStatus('El chat está abierto. Puedes comenzar la conversación.')
-  document.getElementById('phase3-title').textContent = 'Agente conectado'
+  })
 }
 
-// Detecta si hay claves de sesión de Salesforce en localStorage
-function _hasActiveSession() {
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key && (key.includes('embeddedservice') || key.includes('ESW') || key.includes('00DKh000003TzXB'))) {
-      return true
-    }
-  }
-  return false
+// ── Agentforce REST API ───────────────────────────────────────────────────────
+
+async function _createSession(customerId) {
+  const res = await fetch(`${BASE_URL}/sessions`, {
+    method: 'POST',
+    headers: _headers(),
+    body: JSON.stringify({ context: customerId }),
+  })
+  if (!res.ok) throw new Error(`Session ${res.status}`)
+  const data = await res.json()
+  return data.sessionId ?? data.id
 }
 
-// ── Limpia la sesión anterior de Salesforce en localStorage ──────────────────
-
-function _clearSalesforceSession() {
-  const keysToRemove = []
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key && (key.includes('embeddedservice') || key.includes('ESW') || key.includes('00DKh000003TzXB'))) {
-      keysToRemove.push(key)
-    }
-  }
-  keysToRemove.forEach((key) => localStorage.removeItem(key))
+async function _sendMessage(text) {
+  const res = await fetch(`${BASE_URL}/sessions/${sessionId}/messages`, {
+    method: 'POST',
+    headers: _headers(),
+    body: JSON.stringify({ message: text }),
+  })
+  if (!res.ok) throw new Error(`Message ${res.status}`)
+  const data = await res.json()
+  return data.reply ?? data.message ?? JSON.stringify(data)
 }
 
-// ── Helper UI ─────────────────────────────────────────────────────────────────
+function _headers() {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${API_KEY}`,
+  }
+}
 
-function _setStatus(text, isError = false) {
-  const el = document.getElementById('phase3-sub')
-  if (!el) return
-  el.textContent  = text
-  el.style.color  = isError ? '#ff453a' : ''
+// ── DOM helpers ───────────────────────────────────────────────────────────────
+
+function _addUserBubble(container, text) {
+  const bubble = document.createElement('div')
+  bubble.className  = 'chat-bubble user'
+  bubble.textContent = text
+  container.appendChild(bubble)
+  container.scrollTop = container.scrollHeight
+}
+
+function _addTyping(container) {
+  const bubble = document.createElement('div')
+  bubble.className = 'chat-bubble typing'
+  bubble.innerHTML = `
+    <div class="typing-dots">
+      <span></span><span></span><span></span>
+    </div>
+  `
+  container.appendChild(bubble)
+  container.scrollTop = container.scrollHeight
+  return bubble
+}
+
+// Escribe el texto letra a letra en una burbuja de agente
+function _typewrite(container, text) {
+  return new Promise((resolve) => {
+    const bubble = document.createElement('div')
+    bubble.className = 'chat-bubble agent'
+
+    const cursor = document.createElement('span')
+    cursor.className = 'tw-cursor'
+    bubble.appendChild(cursor)
+
+    container.appendChild(bubble)
+    container.scrollTop = container.scrollHeight
+
+    let i = 0
+    const interval = setInterval(() => {
+      if (i < text.length) {
+        bubble.insertBefore(document.createTextNode(text[i]), cursor)
+        i++
+        container.scrollTop = container.scrollHeight
+      } else {
+        clearInterval(interval)
+        // Cursor se desvanece al terminar
+        cursor.style.transition = 'opacity 0.4s'
+        cursor.style.opacity    = '0'
+        setTimeout(() => { cursor.remove(); resolve() }, 450)
+      }
+    }, TYPEWRITER_SPEED)
+  })
 }
