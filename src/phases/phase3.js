@@ -1,109 +1,71 @@
-/**
- * Fase 3: conversación con un agente Agentforce.
- *
- * Necesitarás las siguientes variables de entorno en un archivo .env:
- *   VITE_AGENTFORCE_URL       – endpoint REST de la sesión de Agentforce
- *   VITE_AGENTFORCE_API_KEY   – API key / Bearer token
- *
- * El flujo es:
- *   1. POST /sessions           → obtiene sessionId
- *   2. POST /sessions/:id/messages → envía mensaje y recibe respuesta del agente
- */
-
-const BASE_URL = import.meta.env.VITE_AGENTFORCE_URL  || ''
-const API_KEY  = import.meta.env.VITE_AGENTFORCE_API_KEY || ''
-
-let sessionId = null
+const BOOTSTRAP_URL =
+  'https://nt1779211331673.my.site.com/ESWWebQRDeployment1779234551621/assets/js/bootstrap.min.js'
 
 /**
- * @param {string} qrContent  Contenido del QR escaneado en Fase 2
+ * Fase 3: carga el widget de Agentforce Embedded Messaging
+ * y pasa el customerId (contenido del QR) como campo oculto de pre-chat.
+ *
+ * @param {string} customerId  Contenido del QR escaneado en Fase 2
  */
-export async function initPhase3(qrContent) {
-  const messagesEl = document.getElementById('chat-messages')
-  const form       = document.getElementById('chat-form')
-  const input      = document.getElementById('chat-input')
+export function initPhase3(customerId) {
+  const script = document.createElement('script')
+  script.type  = 'text/javascript'
+  script.src   = BOOTSTRAP_URL
 
-  _addBubble(messagesEl, 'typing', 'Conectando con el agente…')
+  script.onload  = () => _initMessaging(customerId)
+  script.onerror = () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true)
 
+  document.body.appendChild(script)
+}
+
+// ── Inicializa el widget una vez cargado el bootstrap ────────────────────────
+
+function _initMessaging(customerId) {
   try {
-    sessionId = await _createSession(qrContent)
-    _clearBubbles(messagesEl)
-    _addBubble(messagesEl, 'agent', `Sesión iniciada. Contenido del QR: "${qrContent}"`)
+    embeddedservice_bootstrap.settings.language = 'es'
+
+    embeddedservice_bootstrap.init(
+      '00DKh000003TzXB',
+      'WebQRDeployment',
+      'https://nt1779211331673.my.site.com/ESWWebQRDeployment1779234551621',
+      { scrt2URL: 'https://nt1779211331673.my.salesforce-scrt.com' }
+    )
+
+    // El widget dispara este evento cuando está listo para recibir configuración
+    window.addEventListener('onEmbeddedMessagingReady', () => {
+      _onReady(customerId)
+    })
   } catch (err) {
-    console.error('Agentforce session error:', err)
-    _clearBubbles(messagesEl)
-    _addBubble(messagesEl, 'agent', 'No se pudo conectar con el agente. Revisa la configuración.')
-    return
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault()
-    const text = input.value.trim()
-    if (!text) return
-
-    input.value = ''
-    _addBubble(messagesEl, 'user', text)
-
-    const typingEl = _addBubble(messagesEl, 'typing', 'Escribiendo…')
-
-    try {
-      const reply = await _sendMessage(text)
-      typingEl.remove()
-      _addBubble(messagesEl, 'agent', reply)
-    } catch (err) {
-      console.error('Agentforce message error:', err)
-      typingEl.remove()
-      _addBubble(messagesEl, 'agent', 'Error al enviar el mensaje.')
-    }
-  })
-}
-
-// ── Agentforce API helpers ────────────────────────────────────────────────────
-
-async function _createSession(qrContent) {
-  const res = await fetch(`${BASE_URL}/sessions`, {
-    method: 'POST',
-    headers: _headers(),
-    body: JSON.stringify({ context: qrContent }),
-  })
-
-  if (!res.ok) throw new Error(`Session error: ${res.status}`)
-  const data = await res.json()
-  // Ajusta el campo según la respuesta real de Agentforce
-  return data.sessionId ?? data.id
-}
-
-async function _sendMessage(text) {
-  const res = await fetch(`${BASE_URL}/sessions/${sessionId}/messages`, {
-    method: 'POST',
-    headers: _headers(),
-    body: JSON.stringify({ message: text }),
-  })
-
-  if (!res.ok) throw new Error(`Message error: ${res.status}`)
-  const data = await res.json()
-  // Ajusta el campo según la respuesta real de Agentforce
-  return data.reply ?? data.message ?? JSON.stringify(data)
-}
-
-function _headers() {
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${API_KEY}`,
+    console.error('Agentforce init error:', err)
+    _setStatus('Error al inicializar el agente.', true)
   }
 }
 
-// ── DOM helpers ───────────────────────────────────────────────────────────────
+// ── Widget listo: pasa customerId y abre el chat ──────────────────────────────
 
-function _addBubble(container, type, text) {
-  const bubble = document.createElement('div')
-  bubble.className = `chat-bubble ${type}`
-  bubble.textContent = text
-  container.appendChild(bubble)
-  container.scrollTop = container.scrollHeight
-  return bubble
+function _onReady(customerId) {
+  try {
+    // Pasa el contenido del QR como campo oculto de pre-chat
+    embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({
+      customerId,
+    })
+
+    // Abre el chat automáticamente
+    embeddedservice_bootstrap.utilAPI.launchChat()
+
+    _setStatus('El chat está abierto. Puedes comenzar la conversación.')
+    document.getElementById('phase3-title').textContent = 'Agente conectado'
+  } catch (err) {
+    console.error('Agentforce ready error:', err)
+    _setStatus('Error al configurar el agente.', true)
+  }
 }
 
-function _clearBubbles(container) {
-  container.innerHTML = ''
+// ── Helper UI ─────────────────────────────────────────────────────────────────
+
+function _setStatus(text, isError = false) {
+  const el = document.getElementById('phase3-sub')
+  if (!el) return
+  el.textContent  = text
+  el.style.color  = isError ? '#ff453a' : ''
 }
