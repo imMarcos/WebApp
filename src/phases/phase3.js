@@ -58,10 +58,15 @@ function _initMessaging(customerId) {
 }
 
 function _onReady(customerId) {
-  console.log('[utilAPI methods]', Object.getOwnPropertyNames(embeddedservice_bootstrap.utilAPI))
-  console.log('[prechatAPI methods]', Object.getOwnPropertyNames(embeddedservice_bootstrap.prechatAPI))
+  console.log('[bootstrap keys]', Object.keys(embeddedservice_bootstrap))
+  console.log('[utilAPI]', embeddedservice_bootstrap.utilAPI)
+  console.log('[prechatAPI]', embeddedservice_bootstrap.prechatAPI)
 
-  embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
+  try {
+    embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
+  } catch (e) {
+    console.warn('prechatAPI error:', e)
+  }
   setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 600)
 
   _setStatus('El chat está abierto. Puedes comenzar la conversación.')
