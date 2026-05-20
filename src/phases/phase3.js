@@ -8,6 +8,8 @@ const BOOTSTRAP_URL =
  * @param {string} customerId  Contenido del QR escaneado en Fase 2
  */
 export function initPhase3(customerId) {
+  _clearSalesforceSession()
+
   const script = document.createElement('script')
   script.type  = 'text/javascript'
   script.src   = BOOTSTRAP_URL
@@ -61,6 +63,19 @@ function _onReady(customerId) {
     console.error('Agentforce ready error:', err)
     _setStatus('Error al configurar el agente.', true)
   }
+}
+
+// ── Limpia la sesión anterior de Salesforce en localStorage ──────────────────
+
+function _clearSalesforceSession() {
+  const keysToRemove = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && (key.includes('embeddedservice') || key.includes('ESW') || key.includes('00DKh000003TzXB'))) {
+      keysToRemove.push(key)
+    }
+  }
+  keysToRemove.forEach((key) => localStorage.removeItem(key))
 }
 
 // ── Helper UI ─────────────────────────────────────────────────────────────────
