@@ -27,14 +27,14 @@ export function initPhase3(customerId) {
   } else if (existing) {
     // Script en descarga — esperar a que termine
     existing.addEventListener('load',  () => _initMessaging(customerId))
-    existing.addEventListener('error', () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true))
+    existing.addEventListener('error', (e) => _setStatus(`Script error: ${e?.message || e?.type || 'sin detalle'} | src: ${BOOTSTRAP_URL}`, true))
   } else {
     // Fallback: inyectar ahora si preload no corrió
     const script = document.createElement('script')
     script.type  = 'text/javascript'
     script.src   = BOOTSTRAP_URL
     script.onload  = () => _initMessaging(customerId)
-    script.onerror = () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true)
+    script.onerror = (e) => _setStatus(`Script error: ${e?.message || e?.type || 'sin detalle'} | src: ${BOOTSTRAP_URL}`, true)
     document.body.appendChild(script)
   }
 }
@@ -55,7 +55,7 @@ function _initMessaging(customerId) {
     })
   } catch (err) {
     console.error('Agentforce init error:', err)
-    _setStatus('Error al inicializar el agente.', true)
+    _setStatus(`Init error: ${err?.message || String(err)}`, true)
   }
 }
 
