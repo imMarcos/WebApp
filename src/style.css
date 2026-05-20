@@ -225,17 +225,24 @@ body {
   text-align: center;
 }
 
-/* Título con pulso de brillo */
+/* Título con vibración cíclica cada 2s */
 .phase-heading--pulse {
-  animation: headingPulse 2s ease-in-out infinite;
+  animation: headingShake 2s ease-in-out infinite;
+  display: inline-block;
 }
 
-@keyframes headingPulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
+@keyframes headingShake {
+  0%, 80%, 100% { translate: 0 0; }
+  82%           { translate: -5px 0; }
+  84%           { translate: 5px 0; }
+  86%           { translate: -4px 0; }
+  88%           { translate: 4px 0; }
+  90%           { translate: -2px 0; }
+  92%           { translate: 2px 0; }
+  94%           { translate: 0 0; }
 }
 
-/* Flecha animada sobre el botón */
+/* Flecha animada bajo el botón apuntando hacia arriba */
 .btn-camera-wrap {
   display: flex;
   flex-direction: column;
@@ -243,16 +250,16 @@ body {
   gap: 0.5rem;
 }
 
-.arrow-down {
+.arrow-up {
   width: 28px;
   height: 28px;
   color: var(--accent);
-  animation: arrowDrop 1.2s ease-in-out infinite;
+  animation: arrowBounceUp 1.2s ease-in-out infinite;
 }
 
-@keyframes arrowDrop {
-  0%, 100% { translate: 0 0;    opacity: 1; }
-  50%       { translate: 0 8px; opacity: 0.5; }
+@keyframes arrowBounceUp {
+  0%, 100% { translate: 0 0;     opacity: 1; }
+  50%       { translate: 0 -8px; opacity: 0.5; }
 }
 
 /* ── Shared CTA button ────────────────────── */

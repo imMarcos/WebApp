@@ -35,7 +35,7 @@
       <!-- ── Phase 2: QR Scanner ── -->
       <div id="phase-2" class="phase-hidden">
         <div class="phase-inner">
-          <h2 class="phase-heading phase-heading--pulse">Escanea el código QR</h2>
+          <h2 class="phase-heading phase-heading--pulse">Escanea tu código QR</h2>
           <p class="phase-sub">Apunta la cámara hacia el código para continuar.</p>
 
           <div id="camera-wrap">
@@ -50,13 +50,13 @@
           </div>
 
           <div class="btn-camera-wrap">
-            <svg class="arrow-down" viewBox="0 0 24 24" fill="none"
+            <button id="btn-camera" class="cta-btn">Activar cámara</button>
+            <svg class="arrow-up" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="3" x2="12" y2="20"></line>
-              <polyline points="6 14 12 20 18 14"></polyline>
+              <line x1="12" y1="21" x2="12" y2="4"></line>
+              <polyline points="6 10 12 4 18 10"></polyline>
             </svg>
-            <button id="btn-camera" class="cta-btn">Activar cámara</button>
           </div>
           <p id="scan-status" class="scan-status"></p>
         </div>
