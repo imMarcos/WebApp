@@ -60,6 +60,8 @@ function _initMessaging(customerId) {
 }
 
 function _onReady(customerId) {
+  console.log('[SF keys]', Object.keys(localStorage).join('\n'))
+
   window.addEventListener('beforeunload', () => {
     try { embeddedservice_bootstrap.utilAPI.endChat() } catch {}
     _clearSalesforceSession()
