@@ -43,19 +43,26 @@ function _initMessaging(customerId) {
   }
 }
 
-// ── Widget listo: pasa customerId y abre el chat ──────────────────────────────
+// ── Widget listo: termina sesión previa y abre chat nuevo ────────────────────
 
 function _onReady(customerId) {
   try {
-    // Pasa el contenido del QR como campo oculto de pre-chat
-    embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({
-      customerId,
-    })
+    embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
 
-    // Pequeño delay para que el widget termine de renderizar antes de abrirse
-    setTimeout(() => {
-      embeddedservice_bootstrap.utilAPI.launchChat()
-    }, 800)
+    // Si hay una conversación activa la terminamos primero
+    const hasActiveSession = _hasActiveSession()
+
+    if (hasActiveSession) {
+      // Escucha el evento de conversación finalizada para luego abrir la nueva
+      window.addEventListener('onEmbeddedMessagingConversationEnded', () => {
+        _clearSalesforceSession()
+        setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 600)
+      }, { once: true })
+
+      embeddedservice_bootstrap.utilAPI.endChat()
+    } else {
+      setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 800)
+    }
 
     _setStatus('El chat está abierto. Puedes comenzar la conversación.')
     document.getElementById('phase3-title').textContent = 'Agente conectado'
@@ -63,6 +70,17 @@ function _onReady(customerId) {
     console.error('Agentforce ready error:', err)
     _setStatus('Error al configurar el agente.', true)
   }
+}
+
+// Detecta si hay una sesión/conversación activa en localStorage
+function _hasActiveSession() {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && (key.includes('embeddedservice') || key.includes('ESW') || key.includes('00DKh000003TzXB'))) {
+      return true
+    }
+  }
+  return false
 }
 
 // ── Limpia la sesión anterior de Salesforce en localStorage ──────────────────
