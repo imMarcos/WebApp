@@ -27,14 +27,14 @@ export function initPhase3(customerId) {
   } else if (existing) {
     // Script en descarga — esperar a que termine
     existing.addEventListener('load',  () => _initMessaging(customerId))
-    existing.addEventListener('error', (e) => _setStatus(`Script error: ${e?.message || e?.type || 'sin detalle'} | src: ${BOOTSTRAP_URL}`, true))
+    existing.addEventListener('error', () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true))
   } else {
     // Fallback: inyectar ahora si preload no corrió
     const script = document.createElement('script')
     script.type  = 'text/javascript'
     script.src   = BOOTSTRAP_URL
     script.onload  = () => _initMessaging(customerId)
-    script.onerror = (e) => _setStatus(`Script error: ${e?.message || e?.type || 'sin detalle'} | src: ${BOOTSTRAP_URL}`, true)
+    script.onerror = () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true)
     document.body.appendChild(script)
   }
 }
@@ -55,11 +55,16 @@ function _initMessaging(customerId) {
     })
   } catch (err) {
     console.error('Agentforce init error:', err)
-    _setStatus(`Init error: ${err?.message || String(err)}`, true)
+    _setStatus('Error al inicializar el agente.', true)
   }
 }
 
 function _onReady(customerId) {
+  window.addEventListener('beforeunload', () => {
+    try { embeddedservice_bootstrap.utilAPI.endChat() } catch {}
+    _clearSalesforceSession()
+  })
+
   embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
 
   if (_hasActiveSession()) {
