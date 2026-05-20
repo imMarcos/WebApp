@@ -1,23 +1,42 @@
 const BOOTSTRAP_URL =
   'https://nt1779211331673.my.site.com/ESWWebQRDeployment1779234551621/assets/js/bootstrap.min.js'
 
+// Preload the bootstrap script as soon as phase 2 starts, before the QR is scanned
+export function preloadWidget() {
+  if (document.querySelector(`script[src="${BOOTSTRAP_URL}"]`)) return
+  const script = document.createElement('script')
+  script.type = 'text/javascript'
+  script.src  = BOOTSTRAP_URL
+  document.body.appendChild(script)
+}
+
 /**
- * Fase 3: carga el widget de Agentforce Embedded Messaging
- * y pasa el customerId (contenido del QR) como campo oculto de pre-chat.
+ * Fase 3: inicializa el widget de Agentforce Embedded Messaging
+ * con el customerId obtenido del QR. El script ya fue precargado en fase 2.
  *
  * @param {string} customerId  Contenido del QR escaneado en Fase 2
  */
 export function initPhase3(customerId) {
   _clearSalesforceSession()
 
-  const script = document.createElement('script')
-  script.type  = 'text/javascript'
-  script.src   = BOOTSTRAP_URL
+  const existing = document.querySelector(`script[src="${BOOTSTRAP_URL}"]`)
 
-  script.onload  = () => _initMessaging(customerId)
-  script.onerror = () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true)
-
-  document.body.appendChild(script)
+  if (window.embeddedservice_bootstrap) {
+    // Script ya cargado y ejecutado — inicializar de inmediato
+    _initMessaging(customerId)
+  } else if (existing) {
+    // Script en descarga — esperar a que termine
+    existing.addEventListener('load',  () => _initMessaging(customerId))
+    existing.addEventListener('error', () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true))
+  } else {
+    // Fallback: inyectar ahora si preload no corrió
+    const script = document.createElement('script')
+    script.type  = 'text/javascript'
+    script.src   = BOOTSTRAP_URL
+    script.onload  = () => _initMessaging(customerId)
+    script.onerror = () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true)
+    document.body.appendChild(script)
+  }
 }
 
 function _initMessaging(customerId) {

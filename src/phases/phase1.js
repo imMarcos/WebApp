@@ -119,6 +119,8 @@ function _transition(lenis, onComplete) {
 
   const overlay = document.getElementById('transition-overlay')
 
+  gsap.to('.story-dots', { opacity: 0, duration: 0.3, pointerEvents: 'none' })
+
   gsap.to(overlay, {
     opacity: 1,
     duration: 0.6,

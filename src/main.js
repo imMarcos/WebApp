@@ -2,7 +2,7 @@ import './style.css'
 import { gsap } from 'gsap'
 import { initPhase1 } from './phases/phase1.js'
 import { initPhase2 } from './phases/phase2.js'
-import { initPhase3 } from './phases/phase3.js'
+import { initPhase3, preloadWidget } from './phases/phase3.js'
 
 const phase1El  = document.getElementById('phase-1')
 const phase2El  = document.getElementById('phase-2')
@@ -15,6 +15,7 @@ function startPhase2() {
   phase1El.style.display = 'none'
   phase2El.classList.remove('phase-hidden')
   window.scrollTo(0, 0)
+  preloadWidget()
   initPhase2(startPhase3)
 }
 
