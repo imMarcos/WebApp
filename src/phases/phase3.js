@@ -50,8 +50,10 @@ function _onReady(customerId) {
       customerId,
     })
 
-    // Abre el chat automáticamente
-    embeddedservice_bootstrap.utilAPI.launchChat()
+    // Pequeño delay para que el widget termine de renderizar antes de abrirse
+    setTimeout(() => {
+      embeddedservice_bootstrap.utilAPI.launchChat()
+    }, 800)
 
     _setStatus('El chat está abierto. Puedes comenzar la conversación.')
     document.getElementById('phase3-title').textContent = 'Agente conectado'
