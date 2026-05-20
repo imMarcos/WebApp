@@ -251,9 +251,10 @@ body {
 }
 
 .arrow-up {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   color: var(--accent);
+  margin-top: 1rem;
   animation: arrowBounceUp 1.2s ease-in-out infinite;
 }
 
