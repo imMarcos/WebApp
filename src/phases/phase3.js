@@ -58,25 +58,11 @@ function _initMessaging(customerId) {
 }
 
 function _onReady(customerId) {
+  console.log('[utilAPI methods]', Object.getOwnPropertyNames(embeddedservice_bootstrap.utilAPI))
+  console.log('[prechatAPI methods]', Object.getOwnPropertyNames(embeddedservice_bootstrap.prechatAPI))
+
   embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
-
-  // Always end any existing session before starting fresh
-  let launched = false
-  const launch = () => {
-    if (launched) return
-    launched = true
-    setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 600)
-  }
-
-  window.addEventListener('onEmbeddedMessagingConversationEnded', launch, { once: true })
-
-  // Fallback: if endChat throws or session was already closed, launch after timeout
-  try {
-    embeddedservice_bootstrap.utilAPI.endChat()
-    setTimeout(launch, 3000)
-  } catch {
-    launch()
-  }
+  setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 600)
 
   _setStatus('El chat está abierto. Puedes comenzar la conversación.')
   document.getElementById('phase3-title').textContent = 'Agente conectado'
