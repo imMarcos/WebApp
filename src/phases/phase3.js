@@ -1,40 +1,15 @@
 const BOOTSTRAP_URL =
   'https://nt1779211331673.my.site.com/ESWWebQRDeployment1779234551621/assets/js/bootstrap.min.js'
 
-// Preload the bootstrap script as soon as phase 2 starts, before the QR is scanned
-export function preloadWidget() {
-  if (document.querySelector(`script[src="${BOOTSTRAP_URL}"]`)) return
-  const script = document.createElement('script')
-  script.type = 'text/javascript'
-  script.src  = BOOTSTRAP_URL
-  document.body.appendChild(script)
-}
-
-/**
- * Fase 3: inicializa el widget de Agentforce Embedded Messaging
- * con el customerId obtenido del QR. El script ya fue precargado en fase 2.
- *
- * @param {string} customerId  Contenido del QR escaneado en Fase 2
- */
 export function initPhase3(customerId) {
-  const existing = document.querySelector(`script[src="${BOOTSTRAP_URL}"]`)
+  const script = document.createElement('script')
+  script.type  = 'text/javascript'
+  script.src   = BOOTSTRAP_URL
 
-  if (window.embeddedservice_bootstrap) {
-    // Script ya cargado y ejecutado — inicializar de inmediato
-    _initMessaging(customerId)
-  } else if (existing) {
-    // Script en descarga — esperar a que termine
-    existing.addEventListener('load',  () => _initMessaging(customerId))
-    existing.addEventListener('error', () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true))
-  } else {
-    // Fallback: inyectar ahora si preload no corrió
-    const script = document.createElement('script')
-    script.type  = 'text/javascript'
-    script.src   = BOOTSTRAP_URL
-    script.onload  = () => _initMessaging(customerId)
-    script.onerror = () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true)
-    document.body.appendChild(script)
-  }
+  script.onload  = () => _initMessaging(customerId)
+  script.onerror = () => _setStatus('Error al cargar el agente. Intenta de nuevo.', true)
+
+  document.body.appendChild(script)
 }
 
 function _initMessaging(customerId) {
@@ -58,25 +33,21 @@ function _initMessaging(customerId) {
 }
 
 function _onReady(customerId) {
-  console.log('[bootstrap keys]', Object.keys(embeddedservice_bootstrap))
-  console.log('[utilAPI]', embeddedservice_bootstrap.utilAPI)
-  console.log('[prechatAPI]', embeddedservice_bootstrap.prechatAPI)
-
   try {
     embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
   } catch (e) {
     console.warn('prechatAPI error:', e)
   }
-  setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 600)
+
+  setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 800)
 
   _setStatus('El chat está abierto. Puedes comenzar la conversación.')
   document.getElementById('phase3-title').textContent = 'Agente conectado'
 }
 
-
 function _setStatus(text, isError = false) {
   const el = document.getElementById('phase3-sub')
   if (!el) return
-  el.textContent  = text
-  el.style.color  = isError ? '#ff453a' : ''
+  el.textContent = text
+  el.style.color = isError ? '#ff453a' : ''
 }
