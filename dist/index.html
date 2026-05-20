@@ -5,8 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Experience</title>
-    <script type="module" crossorigin src="/assets/index-ClVW0ELZ.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-SP0l0gyl.css">
+    <script type="module" crossorigin src="/assets/index-Mrj7Nv_j.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-B_fjJ5CP.css">
   </head>
   <body>
     <div id="app">
@@ -37,7 +37,7 @@
       <!-- ── Phase 2: QR Scanner ── -->
       <div id="phase-2" class="phase-hidden">
         <div class="phase-inner">
-          <h2 class="phase-heading">Escanea el código QR</h2>
+          <h2 class="phase-heading phase-heading--pulse">Escanea tu código QR</h2>
           <p class="phase-sub">Apunta la cámara hacia el código para continuar.</p>
 
           <div id="camera-wrap">
@@ -51,7 +51,15 @@
             </div>
           </div>
 
-          <button id="btn-camera" class="cta-btn">Activar cámara</button>
+          <div class="btn-camera-wrap">
+            <button id="btn-camera" class="cta-btn">Activar cámara</button>
+            <svg class="arrow-up" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="21" x2="12" y2="4"></line>
+              <polyline points="6 10 12 4 18 10"></polyline>
+            </svg>
+          </div>
           <p id="scan-status" class="scan-status"></p>
         </div>
       </div>

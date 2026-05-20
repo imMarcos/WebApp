@@ -8,8 +8,8 @@ gsap.registerPlugin(ScrollTrigger, SplitText)
 export function initPhase1(onComplete) {
   const lenis = _initLenis()
   _addScrollHint()
-  _addProgressDots()
-  _animateScenes(lenis, onComplete)
+  const dots = _createDots()
+  _animateScenes(lenis, dots, onComplete)
 }
 
 // ── Lenis smooth scroll ──────────────────────────────────────────────────────
@@ -47,9 +47,9 @@ function _addScrollHint() {
   })
 }
 
-// ── Progress dots ─────────────────────────────────────────────────────────────
+// ── Progress dots (solo crea el DOM, la activación va en _animateScenes) ─────
 
-function _addProgressDots() {
+function _createDots() {
   const scenes = document.querySelectorAll('.story-scene')
   const nav = document.createElement('nav')
   nav.className = 'story-dots'
@@ -62,18 +62,7 @@ function _addProgressDots() {
   })
 
   document.body.appendChild(nav)
-
-  const dots = nav.querySelectorAll('.story-dot')
-
-  scenes.forEach((scene, i) => {
-    ScrollTrigger.create({
-      trigger: scene,
-      start: 'top 60%',
-      end: 'bottom 60%',
-      onEnter: ()     => _setActiveDot(dots, i),
-      onEnterBack: () => _setActiveDot(dots, i),
-    })
-  })
+  return nav.querySelectorAll('.story-dot')
 }
 
 function _setActiveDot(dots, index) {
@@ -82,7 +71,7 @@ function _setActiveDot(dots, index) {
 
 // ── Per-scene word-by-word animation ─────────────────────────────────────────
 
-function _animateScenes(lenis, onComplete) {
+function _animateScenes(lenis, dots, onComplete) {
   const scenes = document.querySelectorAll('.story-scene')
 
   scenes.forEach((scene, i) => {
@@ -101,7 +90,9 @@ function _animateScenes(lenis, onComplete) {
         pin: true,
         scrub: 1.2,
         anticipatePin: 1,
-        // Last scene fires the transition when the user scrolls past it
+        // Dot se activa cuando la escena está pinada (onEnter) y al volver (onEnterBack)
+        onEnter:      () => _setActiveDot(dots, i),
+        onEnterBack:  () => _setActiveDot(dots, i),
         onLeave: isLast ? () => _transition(lenis, onComplete) : undefined,
       },
     })
