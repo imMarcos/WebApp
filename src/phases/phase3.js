@@ -39,7 +39,7 @@ function _onReady(customerId) {
     console.warn('prechatAPI error:', e)
   }
 
-  setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 800)
+  setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 1500)
 
   _setStatus('El chat está abierto. Puedes comenzar la conversación.')
   document.getElementById('phase3-title').textContent = 'Agente conectado'
