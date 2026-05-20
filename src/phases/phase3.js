@@ -46,33 +46,31 @@ function _initMessaging(customerId) {
 // ── Widget listo: termina sesión previa y abre chat nuevo ────────────────────
 
 function _onReady(customerId) {
-  try {
-    embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
+  embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
 
-    // Si hay una conversación activa la terminamos primero
-    const hasActiveSession = _hasActiveSession()
+  if (_hasActiveSession()) {
+    // Intenta cerrar la conversación activa; si falla, abre directo
+    window.addEventListener('onEmbeddedMessagingConversationEnded', () => {
+      _clearSalesforceSession()
+      setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 600)
+    }, { once: true })
 
-    if (hasActiveSession) {
-      // Escucha el evento de conversación finalizada para luego abrir la nueva
-      window.addEventListener('onEmbeddedMessagingConversationEnded', () => {
-        _clearSalesforceSession()
-        setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 600)
-      }, { once: true })
-
+    try {
       embeddedservice_bootstrap.utilAPI.endChat()
-    } else {
+    } catch {
+      // endChat no disponible o sin conversación activa → abre directo
+      _clearSalesforceSession()
       setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 800)
     }
-
-    _setStatus('El chat está abierto. Puedes comenzar la conversación.')
-    document.getElementById('phase3-title').textContent = 'Agente conectado'
-  } catch (err) {
-    console.error('Agentforce ready error:', err)
-    _setStatus('Error al configurar el agente.', true)
+  } else {
+    setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 800)
   }
+
+  _setStatus('El chat está abierto. Puedes comenzar la conversación.')
+  document.getElementById('phase3-title').textContent = 'Agente conectado'
 }
 
-// Detecta si hay una sesión/conversación activa en localStorage
+// Detecta si hay claves de sesión de Salesforce en localStorage
 function _hasActiveSession() {
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i)
