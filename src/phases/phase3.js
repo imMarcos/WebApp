@@ -17,8 +17,6 @@ export function preloadWidget() {
  * @param {string} customerId  Contenido del QR escaneado en Fase 2
  */
 export function initPhase3(customerId) {
-  _clearSalesforceSession()
-
   const existing = document.querySelector(`script[src="${BOOTSTRAP_URL}"]`)
 
   if (window.embeddedservice_bootstrap) {
@@ -60,55 +58,30 @@ function _initMessaging(customerId) {
 }
 
 function _onReady(customerId) {
-  console.log('[SF keys]', Object.keys(localStorage).join('\n'))
-
-  window.addEventListener('beforeunload', () => {
-    try { embeddedservice_bootstrap.utilAPI.endChat() } catch {}
-    _clearSalesforceSession()
-  })
-
   embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
 
-  if (_hasActiveSession()) {
-    window.addEventListener('onEmbeddedMessagingConversationEnded', () => {
-      _clearSalesforceSession()
-      setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 600)
-    }, { once: true })
+  // Always end any existing session before starting fresh
+  let launched = false
+  const launch = () => {
+    if (launched) return
+    launched = true
+    setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 600)
+  }
 
-    try {
-      embeddedservice_bootstrap.utilAPI.endChat()
-    } catch {
-      _clearSalesforceSession()
-      setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 800)
-    }
-  } else {
-    setTimeout(() => embeddedservice_bootstrap.utilAPI.launchChat(), 800)
+  window.addEventListener('onEmbeddedMessagingConversationEnded', launch, { once: true })
+
+  // Fallback: if endChat throws or session was already closed, launch after timeout
+  try {
+    embeddedservice_bootstrap.utilAPI.endChat()
+    setTimeout(launch, 3000)
+  } catch {
+    launch()
   }
 
   _setStatus('El chat está abierto. Puedes comenzar la conversación.')
   document.getElementById('phase3-title').textContent = 'Agente conectado'
 }
 
-function _hasActiveSession() {
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key && (key.includes('embeddedservice') || key.includes('ESW') || key.includes('00DKh000003TzXB'))) {
-      return true
-    }
-  }
-  return false
-}
-
-function _clearSalesforceSession() {
-  const keysToRemove = []
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key && (key.includes('embeddedservice') || key.includes('ESW') || key.includes('00DKh000003TzXB'))) {
-      keysToRemove.push(key)
-    }
-  }
-  keysToRemove.forEach((key) => localStorage.removeItem(key))
-}
 
 function _setStatus(text, isError = false) {
   const el = document.getElementById('phase3-sub')
