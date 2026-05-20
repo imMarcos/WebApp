@@ -46,7 +46,6 @@ function _initMessaging(customerId) {
 // ── Widget listo: termina sesión previa y abre chat nuevo ────────────────────
 
 function _onReady(customerId) {
-  console.log('customerId enviado al agente:', customerId)
   embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
 
   if (_hasActiveSession()) {
