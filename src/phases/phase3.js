@@ -26,6 +26,14 @@ function _initMessaging(customerId) {
     window.addEventListener('onEmbeddedMessagingReady', () => {
       _onReady(customerId)
     })
+
+    window.addEventListener('onEmbeddedMessagingConversationStarted', () => {
+      try {
+        embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({ customerId })
+      } catch (e) {
+        console.warn('prechatAPI re-set error:', e)
+      }
+    })
   } catch (err) {
     console.error('Agentforce init error:', err)
     _setStatus('Error al inicializar el agente.', true)
