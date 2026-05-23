@@ -34,6 +34,12 @@ function _initMessaging(customerId) {
         console.warn('prechatAPI re-set error:', e)
       }
     })
+
+    window.addEventListener('onEmbeddedMessagingConversationEnded', () => {
+      _hideWidget()
+      document.getElementById('phase3-title').textContent = 'Conversación finalizada'
+      _setStatus('Para iniciar una nueva sesión, actualiza la página o vuelve a escanear tu código QR.')
+    })
   } catch (err) {
     console.error('Agentforce init error:', err)
     _setStatus('Error al inicializar el agente.', true)
@@ -58,4 +64,14 @@ function _setStatus(text, isError = false) {
   if (!el) return
   el.textContent = text
   el.style.color = isError ? '#ff453a' : ''
+}
+
+function _hideWidget() {
+  try {
+    embeddedservice_bootstrap.utilAPI.minimizeChat()
+  } catch (e) {
+    console.warn('minimizeChat error:', e)
+  }
+  const widget = document.querySelector('embedded-service-live-agent-rich-messaging')
+  if (widget) widget.style.display = 'none'
 }
